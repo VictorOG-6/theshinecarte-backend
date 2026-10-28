@@ -1,0 +1,30 @@
+{% macro names(order_items) -%} {% for item in order_items %}
+<h3 style="margin: 0; font-size: 15px; font-weight: bold; color: #222222">
+  {{ item.name }}
+</h3>
+{%- if not loop.last -%}
+<div style="height: 12px"></div>
+{%- endif -%} {% endfor %} {%- endmacro %} {% macro image_urls(order_items) -%}
+{{ order_items[0].image_url if order_items else "" }} {%- endmacro %} {% macro
+prices(order_items) -%} {% for item in order_items %}
+<h3 style="margin: 0; font-size: 15px; font-weight: bold; color: #222222">
+  {{ item.price }}
+</h3>
+{%- if not loop.last -%}
+<div style="height: 12px"></div>
+{%- endif -%} {% endfor %} {%- endmacro %} {% macro quantities(order_items) -%}
+{% for item in order_items %}
+<p style="margin: 0; font-size: 14px; color: #777777">x{{ item.quantity }}</p>
+{%- if not loop.last -%}
+<div style="height: 12px"></div>
+{%- endif -%} {% endfor %} {%- endmacro %} {% macro variants(order_items) -%} {%
+for item in order_items %}
+<p style="margin: 0; font-size: 14px; color: #777777">{{ item.variant }}</p>
+{%- if not loop.last -%}
+<div style="height: 12px"></div>
+{%- endif -%} {% endfor %} {%- endmacro %} {% macro sub_variants(order_items)
+-%} {% for item in order_items %}
+<p style="margin: 0; font-size: 14px; color: #777777">{{ item.sub_variant }}</p>
+{%- if not loop.last -%}
+<div style="height: 12px"></div>
+{%- endif -%} {% endfor %} {%- endmacro %}
