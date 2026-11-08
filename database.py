@@ -1,6 +1,7 @@
 from fastapi import Depends
 from sqlmodel import create_engine, SQLModel, Session
 from typing import Annotated
+from urllib.parse import quote_plus
 import os
 import re
 
@@ -40,18 +41,43 @@ def _normalize_database_url(url: str) -> str:
     return url
 
 
+def _build_database_url_from_parts() -> str | None:
+    user = _lookup_env("POSTGRES_USER")
+    password = _lookup_env("POSTGRES_PASSWORD")
+    host = _lookup_env("POSTGRES_HOST")
+    port = _lookup_env("POSTGRES_PORT")
+    db = _lookup_env("POSTGRES_DB")
+    if not all((user, password, host, db)):
+        return None
+    safe_user = quote_plus(user)
+    safe_password = quote_plus(password)
+    return f"postgresql://{safe_user}:{safe_password}@{host}:{port}/{db}"
+
+
 def _resolve_database_url() -> str:
-    for env_var in ("DATABASE_PRIVATE_URL", "DATABASE_URL"):
+    # Railway: DATABASE_PRIVATE_URL (in-network), DATABASE_URL, DATABASE_PUBLIC_URL
+    for env_var in (
+        "DATABASE_PRIVATE_URL",
+        "DATABASE_URL",
+        "DATABASE_PUBLIC_URL",
+    ):
         url = os.getenv(env_var)
         if not url:
             continue
         url = _expand_env_vars(url.strip())
-        if url and "${" not in url:
+        if url and "${" not in url and not url.startswith("${{"):
             return _normalize_database_url(url)
+
+    built = _build_database_url_from_parts()
+    if built:
+        return built
 
     raise RuntimeError(
         "DATABASE_URL is missing or contains unresolved variables. "
-        "Link a PostgreSQL service in Railway or set DATABASE_URL."
+        "On your Railway app service (not the Postgres service), add a variable "
+        "reference to the linked Postgres DATABASE_URL or DATABASE_PRIVATE_URL, "
+        "or set a full postgresql:// URL. Do not paste raw ${{Postgres...}} "
+        "templates; use Railway's 'Add Reference' control."
     )
 
 
